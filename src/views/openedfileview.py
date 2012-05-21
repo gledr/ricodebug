@@ -53,7 +53,7 @@ class OpenedFileView(QObject):
       
         self.fileWatcher = QFileSystemWatcher()
         self.fileWatcher.addPath(self.filename)
-        self.fileWatcher.connect(self.FileWatcher, SIGNAL("fileChanged(const QString&)"), self.fileChanged)
+        self.fileWatcher.connect(self.fileWatcher, SIGNAL("fileChanged(const QString&)"), self.fileChanged)
     
         self.tab = QtGui.QWidget()
         self.gridLayout = QtGui.QGridLayout(self.tab)
