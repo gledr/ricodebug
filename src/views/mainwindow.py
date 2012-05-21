@@ -126,9 +126,9 @@ class MainWindow(QMainWindow):
         #init RecentFileHandler
         nrRecentFiles = 5
         self.initRecentFileHandler(nrRecentFiles)
-        
+
         QObject.connect(self.debugController, SIGNAL('executableOpened'), self.showExecutableName)
-        QObject.connect(self.debugController, SIGNAL('executableOpened'), self.__binaryFileWatcher)
+        QObject.connect(self.debugController, SIGNAL('executableOpened'), self.__observeWorkingBinary)
 
         # signal proxy
         QObject.connect(self.signalproxy, SIGNAL('inferiorIsRunning(PyQt_PyObject)'), self.targetStartedRunning, Qt.QueuedConnection)
@@ -159,17 +159,10 @@ class MainWindow(QMainWindow):
         self.readSettings()
 
         self.quickwatch = QuickWatch(self, self.distributedObjects)
-        
-       
-       
-       
-          
-        self.BinaryName = None
-        self.FileWatcher = QFileSystemWatcher()
-       
-        self.FileWatcher.connect(self.FileWatcher, SIGNAL("fileChanged(const QString&)"), self.__binaryChanged)  
-       
-        
+
+        self.binaryName = None
+        self.fileWatcher = QFileSystemWatcher()
+        self.fileWatcher.connect(self.fileWatcher, SIGNAL("fileChanged(const QString&)"), self.__binaryChanged)
 
     def addPluginDockWidget(self, area, widget, addToggleViewAction):
         self.addDockWidget(area, widget)
@@ -230,8 +223,6 @@ class MainWindow(QMainWindow):
         filename = str(QFileDialog.getOpenFileName(self, "Open Executable"))
         if (filename != ""):
             self.debugController.openExecutable(filename)
-            
-            
 
     def showLoadPluginsDialog(self):
         dialog = QFileDialog()
@@ -275,22 +266,21 @@ class MainWindow(QMainWindow):
     def readSettings(self):
         self.restoreGeometry(self.settings.value("geometry").toByteArray())
         self.restoreState(self.settings.value("windowState").toByteArray())
-      
-    """ Private Method to Observe Debugged Binary """  
-    def __binaryFileWatcher(self, filename):
-        # any binary active ?
-        if self.BinaryName != None:
-            self.FileWatcher.removePath(self.BinaryName)     
-        self.FileWatcher.addPath(filename)
-        self.BinaryName = filename
-       
-    """ Slot for FileWatcher - Using QtMessagebox for interaction"""   
-    def __binaryChanged(self):   
-        self.Box = QtGui.QMessageBox();
-        if self.Box.question(self,"Binary Changed !","Reload File ?"
-          ,QtGui.QMessageBox.Yes,QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes:
-            self.debugController.openExecutable(self.BinaryName)
+
+    def __observeWorkingBinary(self,filename):
+        """ Private Method to Observe Debugged Binary """
+        if self.binaryName != None:
+            self.fileWatcher.removePath(self.binaryName)
+        self.fileWatcher.addPath(filename)
+        self.binaryName = filename
+
+    def __binaryChanged(self):
+        """ Slot for FileWatcher - Using QtMessagebox for interaction"""
+        box = QtGui.QMessageBox();
+        if box.question(self,"Binary Changed!","Reload File?",
+             QtGui.QMessageBox.Yes,QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes:
+           self.debugController.openExecutable(self.binaryName)
         else:
-            # set Filewatcher active again - strange syntax
-            self.FileWatcher.removePath(self.BinaryName)
-            self.FileWatcher.addPath(self.BinaryName)    
+            self.fileWatcher.removePath(self.binaryName)
+            self.fileWatcher.addPath(self.binaryName)
+
