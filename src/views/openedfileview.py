@@ -51,9 +51,9 @@ class OpenedFileView(QObject):
         self.shown = False
         self.expToWatch = False
       
-        self.FileWatcher = QFileSystemWatcher()
-        self.FileWatcher.addPath(self.filename)
-        self.FileWatcher.connect(self.FileWatcher, SIGNAL("fileChanged(const QString&)"), self.fileChanged)
+        self.fileWatcher = QFileSystemWatcher()
+        self.fileWatcher.addPath(self.filename)
+        self.fileWatcher.connect(self.FileWatcher, SIGNAL("fileChanged(const QString&)"), self.fileChanged)
     
         self.tab = QtGui.QWidget()
         self.gridLayout = QtGui.QGridLayout(self.tab)
@@ -133,7 +133,6 @@ class OpenedFileView(QObject):
         self.connect(self.distributedObjects.actions.actions[Actions.ToggleTrace], SIGNAL('triggered()'), self.toggleTracepoint)
         self.connect(self.distributedObjects.actions.actions[Actions.AddVarToDataGraph], SIGNAL('triggered()'), self.AddVarToDataGraph)
 
-    
     def fileChanged(self):         
         logging.warning("Source file %s modified. Recompile executable for correct debugging.", self.filename)     
 
